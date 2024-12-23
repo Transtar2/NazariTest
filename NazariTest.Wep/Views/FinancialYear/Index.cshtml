@@ -1,0 +1,136 @@
+﻿@using NazariTest.Application.Models
+@model FinancialYearCreateRequest
+
+<script src="~/lib/ag-grid-community/package/dist/ag-grid-community.min.js"></script>
+<div class="row">
+    <div class="col-12">
+            <div class="box-header">
+                <h4 class="box-title">سال مالی</h4>
+            </div>
+            <div class="box-body">
+                <div class="row">
+                    <div class="col-12">
+                        <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#add-model">جدید</button>
+                    </div>
+                    <hr class="my-15">
+                <div id="myGrid" style="height: 600px;width:100%;" class="ag-theme-balham"></div>
+            </div>
+            </div>
+    </div>
+</div>
+<div id="add-model" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" data-bs-backdrop="static" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="myModalLabel">سال مالی جدید</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-lg-12 col-12">
+                        <div class="box">
+                            <form class="form" action="/FinancialYear/Create" method="post" data-ajax="true" data-ajax-complete="Salert">
+                                <div class="box-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label asp-for="Title"></label>
+                                                <input asp-for="Title" type="text" class="form-control">
+                                                <span asp-validation-for="Title" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label asp-for="StartDate"></label>
+                                                <input asp-for="StartDate" type="text" class="form-control">
+                                                <span asp-validation-for="StartDate" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label asp-for="EndDate"></label>
+                                                <input asp-for="EndDate" type="text" class="form-control">
+                                                <span asp-validation-for="EndDate" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="box-footer text-end">
+                                    <ButtonSubmit></ButtonSubmit>
+                                    <ButtonCloseModal></ButtonCloseModal>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" charset="utf-8">
+     var gridOptions = {};
+
+    // Your Javascript code to create the Data Grid
+
+      var datasource = {
+    getRows: function (params) {
+        console.log('Requesting rows:', params);
+
+        // Prepare the request payload
+        const requestPayload = {
+            startRow: params.startRow,
+            endRow: params.endRow,
+            sortModel: params.sortModel,
+            filterModel: params.filterModel
+        };
+         console.log('requestPayload=====:', requestPayload);
+            // Simulate server call
+            fetch('/FinancialYear/GetData', {
+                method: 'POST',
+                body: JSON.stringify(requestPayload),
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('data======', data);
+                // Provide rows and total row count to AG Grid
+                params.successCallback(data.rows, data.totalCount);
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+                params.failCallback();
+            });
+        }
+    };
+
+        // Grid Options: Contains all of the Data Grid configurations
+    var gridOptions = {
+          enableRtl: true,
+        // Row Data: The data to be displayed.
+        rowModelType: 'infinite',
+        datasource: datasource,
+        //rowData: [],
+        //     { make: "Tesla", model: "Model Y", price: 64950, electric: true },
+        //     { make: "Ford", model: "F-Series", price: 33850, electric: false },
+        //     { make: "Toyota", model: "Corolla", price: 29600, electric: false },
+        // ],
+        // Column Definitions: Defines the columns to be displayed.
+        columnDefs: [
+            {headerName: "عنوان", field: "title" },
+            {headerName: "تاریخ شروع", field: "startDate" },
+            {headerName: "تاریخ پایان", field: "endDate" }
+        ]
+    };
+
+    //
+    //     var myGridElement = document.querySelector('#myGrid');
+    //    var api=  agGrid.createGrid(myGridElement, gridOptions);
+
+    // agGrid.simpleHttpRequest({ url: '/FinancialYear/GetGridData' }).then(function (data) {
+    //     api.setRowData(data);
+    // });
+    var myGridElement = document.querySelector('#myGrid');
+    var api = agGrid.createGrid(myGridElement, gridOptions);
+  
+
+</script>
