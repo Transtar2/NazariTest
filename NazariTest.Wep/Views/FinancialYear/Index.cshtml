@@ -8,73 +8,63 @@
                 <h4 class="box-title">سال مالی</h4>
             </div>
             <div class="box-body">
-                <div class="row">
-                    <div class="col-12">
-                        <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#add-model">جدید</button>
+            <div class="row">
+                <div class="col-lg-12 col-12">
+                    <div class="box">
+                        <form class="form" action="/FinancialYear/Create" method="post" data-ajax="true" data-ajax-complete="Salert">
+                            <div class="box-body">
+                                <div class="row">
+                                    <input type="hidden" asp-for=Id />
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label asp-for="Title"></label>
+                                            <input asp-for="Title" type="text" class="form-control edit">
+                                            <span asp-validation-for="Title" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label asp-for="StartDate"></label>
+                                            <input asp-for="StartDate" type="text" class="form-control edit">
+                                            <span asp-validation-for="StartDate" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label asp-for="EndDate"></label>
+                                            <input asp-for="EndDate" type="text" class="form-control edit">
+                                            <span asp-validation-for="EndDate" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="box-footer text-end">
+                                <ButtonSubmit id="btn-save"></ButtonSubmit>
+                                <button class="btn btn-info" id="btn-edit" disabled="disabled" onclick="EnableEdit()" type="button">اصلاح</button>
+                                <button class="btn btn-danger" id="btn-remove" disabled="disabled" onclick="Remove()" type="button">حذف</button>
+                                
+                            </div>
+                        </form>
                     </div>
+                </div>
+            </div>
+                <div class="row">
+                   
                     <hr class="my-15">
                 <div id="myGrid" style="height: 600px;width:100%;" class="ag-theme-balham"></div>
             </div>
             </div>
     </div>
 </div>
-<div id="add-model" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" data-bs-backdrop="static" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="myModalLabel">سال مالی جدید</h4>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-lg-12 col-12">
-                        <div class="box">
-                            <form class="form" action="/FinancialYear/Create" method="post" data-ajax="true" data-ajax-complete="Salert">
-                                <div class="box-body">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label asp-for="Title"></label>
-                                                <input asp-for="Title" type="text" class="form-control">
-                                                <span asp-validation-for="Title" class="text-danger"></span>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label asp-for="StartDate"></label>
-                                                <input asp-for="StartDate" type="text" class="form-control">
-                                                <span asp-validation-for="StartDate" class="text-danger"></span>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label asp-for="EndDate"></label>
-                                                <input asp-for="EndDate" type="text" class="form-control">
-                                                <span asp-validation-for="EndDate" class="text-danger"></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="box-footer text-end">
-                                    <ButtonSubmit></ButtonSubmit>
-                                    <ButtonCloseModal></ButtonCloseModal>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+
 <script type="text/javascript" charset="utf-8">
      var gridOptions = {};
 
     // Your Javascript code to create the Data Grid
 
       var datasource = {
-    getRows: function (params) {
-        console.log('Requesting rows:', params);
+      getRows: function (params) {
+        //console.log('Requesting rows:', params);
 
         // Prepare the request payload
         const requestPayload = {
@@ -83,7 +73,7 @@
             sortModel: params.sortModel,
             filterModel: params.filterModel
         };
-         console.log('requestPayload=====:', requestPayload);
+         //console.log('requestPayload=====:', requestPayload);
             // Simulate server call
             fetch('/FinancialYear/GetData', {
                 method: 'POST',
@@ -92,45 +82,155 @@
             })
             .then(response => response.json())
             .then(data => {
-                console.log('data======', data);
+                //console.log('data======', data);
                 // Provide rows and total row count to AG Grid
                 params.successCallback(data.rows, data.totalCount);
             })
             .catch(error => {
-                console.error('Error fetching data:', error);
+               // console.error('Error fetching data:', error);
                 params.failCallback();
             });
         }
     };
+    //
 
+        ///
         // Grid Options: Contains all of the Data Grid configurations
     var gridOptions = {
-          enableRtl: true,
-        // Row Data: The data to be displayed.
+        enableRtl: true,
+        rowSelection: {mode: 'singleRow'},
+        onRowSelected: (event) => {
+
+                  handleRowSelection(event);
+            },
+           onSelectionChanged: () => {
+            const selectedNodes = api.getSelectedNodes();
+
+            // Simulate `onRowSelected` for all selected nodes
+            selectedNodes.forEach((node) => {
+                handleRowSelection({ node, data: node.data });
+            });
+        },
         rowModelType: 'infinite',
         datasource: datasource,
-        //rowData: [],
-        //     { make: "Tesla", model: "Model Y", price: 64950, electric: true },
-        //     { make: "Ford", model: "F-Series", price: 33850, electric: false },
-        //     { make: "Toyota", model: "Corolla", price: 29600, electric: false },
-        // ],
         // Column Definitions: Defines the columns to be displayed.
         columnDefs: [
-            {headerName: "عنوان", field: "title" },
+                {headerName: "عنوان", field: "title",filter: true },
             {headerName: "تاریخ شروع", field: "startDate" },
             {headerName: "تاریخ پایان", field: "endDate" }
         ]
     };
-
-    //
-    //     var myGridElement = document.querySelector('#myGrid');
-    //    var api=  agGrid.createGrid(myGridElement, gridOptions);
-
-    // agGrid.simpleHttpRequest({ url: '/FinancialYear/GetGridData' }).then(function (data) {
-    //     api.setRowData(data);
-    // });
     var myGridElement = document.querySelector('#myGrid');
     var api = agGrid.createGrid(myGridElement, gridOptions);
-  
 
+  /////////////////
+  function handleRowSelection(event) {
+    if (event.node && event.node.isSelected()) {
+                     $("#Id").val(event.data.id);
+                     $("#Title").val(event.data.title);
+                     $("#StartDate").val(event.data.startDate);
+                     $("#EndDate").val(event.data.endDate);
+                     $(".edit").attr('readonly','readonly');
+                     $("#btn-save").attr('disabled','disabled');
+                     $("#btn-edit").removeAttr('disabled');
+                    
+               }
+            else{
+                     $("#Id").val('');
+                     $("#Title").val('');
+                     $("#StartDate").val('');
+                     $("#EndDate").val('');
+                     $(".edit").removeAttr('readonly');
+                     $("#btn-save").removeAttr('disabled');
+                     $("#btn-edit").attr('disabled','disabled');
+                     $("#btn-remove").attr('disabled','disabled');
+                }
+}
+/////////////////////
+function EnableEdit(){
+    $(".edit").removeAttr('readonly');
+    $("#btn-save").removeAttr('disabled');
+    $("#btn-remove").removeAttr('disabled');
+}
+////
+      function Salert(data) {
+                 if (data.responseJSON.isSuccess == false) {
+                     Swal.fire(
+                         {
+                             text: data.responseJSON.message,
+                             title: "خطا",
+                             icon: 'error',
+                             confirmButtonColor: '#5156be'
+                         }
+                     )
+
+                 }
+                 if (data.responseJSON.isSuccess == true) {
+                     Swal.fire(
+                         {
+                             text: data.responseJSON.message,
+                             title: "توجه",
+                             icon: 'success',
+                             confirmButtonColor: '#5156be',
+                             willClose: () => {
+                                  $('.form').find('input:text, input:password, input[type="email"], input[type="number"], textarea').val('');
+                                         
+                             }
+                         }
+                     )
+
+                 }
+             }
+/////////////////////
+
+
+
+         function Remove() {
+                
+                
+                Swal.fire({
+                    title: 'حذف',
+                    text: "آیا از حذف مطمین هستید؟",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'بلی',
+                    cancelButtonText: 'انصراف'
+                }).then((result) => {
+                    console.log(result);
+                    if (result.value) {
+                            $.post('/FinancialYear/Delete', { id: $("#Id").val() })
+                            .done(function (data) {
+                                        console.log('data.responseJSON.isSuccess=',data);
+                                    if (data.isSuccess == true) {
+                                               $('.form').find('input:text, input:password, input[type="email"], input[type="number"],input[type="hidden"], textarea').val('');
+
+                                     // refresh grid
+                                    }
+                                   
+                            });
+                    }
+                })
+         
+            }
+
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const inputs = document.querySelectorAll('.input-field');
+
+        inputs.forEach((input, index) => {
+            input.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault(); // Prevent form submission
+                    const nextInput = inputs[index + 1]; // Get the next input field
+
+                    if (nextInput) {
+                        nextInput.focus(); // Set focus to the next input
+                    }
+                }
+            });
+        });
+    });
 </script>

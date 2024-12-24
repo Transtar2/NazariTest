@@ -21,10 +21,10 @@ namespace NazariTest.Application.Services
         Task<JsonResponse> CreateAsync(FinancialYearCreateRequest model);
         Task<FinancialYearResponse> GetByIdAsync(int id);
         Task<IEnumerable<FinancialYearResponse>> GetAllAsync();
-        Task<JsonResponse> UpdateAsync(FinancialYearUpdateRequest model);
-        Task DeleteAsync(int id);
+        Task<JsonResponse> UpdateAsync(FinancialYearCreateRequest model);
+        Task<JsonResponse> DeleteAsync(Guid id);
         Task DeleteRangeAsync(IEnumerable<Guid> ids);
-        
+
     }
 
     public class FinancialYearService
@@ -36,44 +36,14 @@ namespace NazariTest.Application.Services
         public async Task<JsonResponse> CreateAsync(FinancialYearCreateRequest model)
         {
             var repo = unitOfWork.Repository<FinancialYear>();
-            var entity = mapper.Map<FinancialYear>(model);
-            model.Title =model.Title.Trim();
-            var startDate = model.StartDate.ShamsiToGregorian();
-            var endDate = model.EndDate.ShamsiToGregorian();
-            var financialYearList = repo.GetAll().ToList();
-            if (financialYearList.Any(x => x.Title == model.Title.Trim()  ))
+            var validationResult = DateOverlapValidation(model);
+            if (!validationResult.IsSuccess)
             {
-                return new JsonResponse
-                {
-                    IsSuccess = true,
-                    Message = "دوره ای با این عنوان قبلا تعریف شده است"
-                };
-            }
-            if (startDate > endDate)
-            {
-                return new JsonResponse
-                {
-                    IsSuccess = true,
-                    Message = "تاریخ شروع از تاریخ پایان نمیتواند بزرگتر باشد"
-                };
-            }
-            if (financialYearList.Any(x =>  x.StartDate.Date <= startDate.Date && x.EndDate.Date > endDate.Date))
-            {
-                return new JsonResponse
-                {
-                    IsSuccess = true,
-                    Message = "این رنج تاریخ با دوره های قبلی تداخل دارد"
-                };
-            }
-            if (financialYearList.Any(x =>  x.StartDate.Date <= endDate.Date && x.EndDate.Date >= endDate.Date))
-            {
-                return new JsonResponse
-                {
-                    IsSuccess = true,
-                    Message = "این رنج تاریخ با دوره های قبلی تداخل دارد"
-                };
+                return validationResult;
             }
 
+            model.Title = model.Title.Trim();
+            var entity = mapper.Map<FinancialYear>(model);
             await repo.AddAsync(entity);
             await unitOfWork.SaveChangesAsync();
             return new JsonResponse
@@ -82,10 +52,60 @@ namespace NazariTest.Application.Services
                 Message = MessageType.InsertOk.ToDescription()
             };
         }
-
-        public async Task DeleteAsync(int id)
+        private JsonResponse DateOverlapValidation(FinancialYearCreateRequest model)
         {
-           // var currentUserId = get current user id from current context ;
+            var repo = unitOfWork.Repository<FinancialYear>();
+            var startDate = model.StartDate.ShamsiToGregorian();
+            var endDate = model.EndDate.ShamsiToGregorian();
+
+            var financialYearList = repo.GetAll().Where(x=> !x.IsDeleted).ToList();
+            if (model.Id is not null)
+            {
+                financialYearList= financialYearList.Where(x=>x.Id != model.Id).ToList();
+            }
+            
+
+            if (financialYearList.Any(x => x.Title == model.Title.Trim()))
+            {
+                return new JsonResponse
+                {
+                    IsSuccess = false,
+                    Message = "دوره ای با این عنوان قبلا تعریف شده است"
+                };
+            }
+            if (startDate > endDate)
+            {
+                return new JsonResponse
+                {
+                    IsSuccess = false,
+                    Message = "تاریخ شروع از تاریخ پایان نمیتواند بزرگتر باشد"
+                };
+            }
+            if (financialYearList.Any(x => x.StartDate.Date <= startDate.Date && x.EndDate.Date > endDate.Date))
+            {
+                return new JsonResponse
+                {
+                    IsSuccess = false,
+                    Message = "این رنج تاریخ با دوره های قبلی تداخل دارد"
+                };
+            }
+            if (financialYearList.Any(x => x.StartDate.Date <= endDate.Date && x.EndDate.Date >= endDate.Date))
+            {
+                return new JsonResponse
+                {
+                    IsSuccess = false,
+                    Message = "این رنج تاریخ با دوره های قبلی تداخل دارد"
+                };
+            }
+            return new JsonResponse
+            {
+                IsSuccess = true
+            };
+
+        }
+        public async Task<JsonResponse> DeleteAsync(Guid id)
+        {
+            // var currentUserId = get current user id from current context ;
             var repo = unitOfWork.Repository<FinancialYear>();
             var entity = await repo.GetByIdAsync(id);
             entity.IsDeleted = true;
@@ -93,6 +113,11 @@ namespace NazariTest.Application.Services
             // entity.DeleterUserId = id set this user id;
             repo.Update(entity);
             await unitOfWork.SaveChangesAsync();
+            return new JsonResponse
+            {
+                IsSuccess = true,
+                Message= MessageType.DeleteOk.ToDescription()
+            };
         }
 
         public async Task DeleteRangeAsync(IEnumerable<Guid> ids)
@@ -118,10 +143,16 @@ namespace NazariTest.Application.Services
             return mapper.Map<FinancialYearResponse>(entity);
         }
 
-        public async Task<JsonResponse> UpdateAsync(FinancialYearUpdateRequest model)
+        public async Task<JsonResponse> UpdateAsync(FinancialYearCreateRequest model)
         {
             var repo = unitOfWork.Repository<FinancialYear>();
             var entity = mapper.Map<FinancialYear>(model);
+
+            var validationResult = DateOverlapValidation(model);
+            if (!validationResult.IsSuccess)
+            {
+                return validationResult;
+            }
             repo.Update(entity);
             await unitOfWork.SaveChangesAsync();
             return new JsonResponse
