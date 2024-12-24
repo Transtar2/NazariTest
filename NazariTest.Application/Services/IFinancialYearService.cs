@@ -12,6 +12,7 @@ using NazariTest.Application.Interfaces;
 using NazariTest.Application.Models;
 using NazariTest.Application.Public;
 using NazariTest.Domain.Entities;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace NazariTest.Application.Services
 {
@@ -23,6 +24,7 @@ namespace NazariTest.Application.Services
         Task<JsonResponse> UpdateAsync(FinancialYearUpdateRequest model);
         Task DeleteAsync(int id);
         Task DeleteRangeAsync(IEnumerable<Guid> ids);
+        
     }
 
     public class FinancialYearService
@@ -33,10 +35,45 @@ namespace NazariTest.Application.Services
     {
         public async Task<JsonResponse> CreateAsync(FinancialYearCreateRequest model)
         {
-            
             var repo = unitOfWork.Repository<FinancialYear>();
             var entity = mapper.Map<FinancialYear>(model);
-            
+            model.Title =model.Title.Trim();
+            var startDate = model.StartDate.ShamsiToGregorian();
+            var endDate = model.EndDate.ShamsiToGregorian();
+            var financialYearList = repo.GetAll().ToList();
+            if (financialYearList.Any(x => x.Title == model.Title.Trim()  ))
+            {
+                return new JsonResponse
+                {
+                    IsSuccess = true,
+                    Message = "دوره ای با این عنوان قبلا تعریف شده است"
+                };
+            }
+            if (startDate > endDate)
+            {
+                return new JsonResponse
+                {
+                    IsSuccess = true,
+                    Message = "تاریخ شروع از تاریخ پایان نمیتواند بزرگتر باشد"
+                };
+            }
+            if (financialYearList.Any(x =>  x.StartDate.Date <= startDate.Date && x.EndDate.Date > endDate.Date))
+            {
+                return new JsonResponse
+                {
+                    IsSuccess = true,
+                    Message = "این رنج تاریخ با دوره های قبلی تداخل دارد"
+                };
+            }
+            if (financialYearList.Any(x =>  x.StartDate.Date <= endDate.Date && x.EndDate.Date >= endDate.Date))
+            {
+                return new JsonResponse
+                {
+                    IsSuccess = true,
+                    Message = "این رنج تاریخ با دوره های قبلی تداخل دارد"
+                };
+            }
+
             await repo.AddAsync(entity);
             await unitOfWork.SaveChangesAsync();
             return new JsonResponse
@@ -66,7 +103,6 @@ namespace NazariTest.Application.Services
             repo.RemoveRange(entitiesToRemove);
             await unitOfWork.SaveChangesAsync();
         }
-
         public async Task<IEnumerable<FinancialYearResponse>> GetAllAsync()
         {
             var repo = unitOfWork.Repository<FinancialYear>();

@@ -34,7 +34,6 @@ namespace NazariTest.Wep.Controllers
 
                 };
             }
-
             return await financialYearService.CreateAsync(model);
 
         }
