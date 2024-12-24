@@ -24,16 +24,7 @@ namespace NazariTest.Persistence.Data
 
         public async Task<TEntity> GetByIdAsync(object id)
         {
-            try
-            {
                 return await _dbSet.FindAsync(id);
-            }
-            catch (Exception)
-            {
-
-                throw;
-            }
-
         }
 
         public async Task<IEnumerable<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>> predicate = null)
@@ -45,7 +36,7 @@ namespace NazariTest.Persistence.Data
                 query = query.Where(predicate);
             }
 
-            return await query.ToListAsync();
+            return await query.AsNoTracking().ToListAsync();
         }
         public IEnumerable<TEntity> GetAll(Expression<Func<TEntity, bool>> predicate = null)
         {
@@ -56,7 +47,7 @@ namespace NazariTest.Persistence.Data
                 query = query.Where(predicate);
             }
 
-            return query.ToList();
+            return query.AsNoTracking().ToList();
         }
         public async Task AddAsync(TEntity entity)
         {
@@ -68,7 +59,15 @@ namespace NazariTest.Persistence.Data
         }
         public void Update(TEntity entity)
         {
-            _dbSet.Update(entity);
+            try
+            {
+                _dbSet.Update(entity);
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
         }
 
         public void Remove(TEntity entity)

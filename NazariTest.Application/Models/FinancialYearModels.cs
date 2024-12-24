@@ -9,6 +9,8 @@ namespace NazariTest.Application.Models
 {
     public class FinancialYearCreateRequest
     {
+        public Guid? Id { get; set; }
+
         [Required(ErrorMessage ="الزامی")]
         [Display(Name = "نام")]
         public string Title { get; set; }

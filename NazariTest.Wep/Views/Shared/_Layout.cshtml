@@ -54,32 +54,5 @@
 </body>
 </html>
 <script>
-    function Salert(data) {
-             console.log('msg=', data);
-             if (data.responseJSON.isSuccess == false) {
-                 Swal.fire(
-                     {
-                         text: data.responseJSON.message,
-                         title: "خطا",
-                         icon: 'error',
-                         confirmButtonColor: '#5156be'
-                     }
-                 )
-
-             }
-             if (data.responseJSON.isSuccess == true) {
-                 Swal.fire(
-                     {
-                         text: data.responseJSON.message,
-                         title: "توجه",
-                         icon: 'success',
-                         confirmButtonColor: '#5156be',
-                         willClose: () => {
-                             api.refreshCells()
-                         }
-                     }
-                 )
-
-             }
-         }
+  
 </script>

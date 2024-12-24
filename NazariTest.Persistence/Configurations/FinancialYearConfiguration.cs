@@ -18,7 +18,7 @@ namespace NazariTest.Persistence.Configurations
             builder.Property(x=>x.StartDate).IsRequired();
             builder.Property(x=>x.EndDate).IsRequired();
             builder.Property(x=>x.IsDeleted).HasDefaultValue(false);
-            builder.HasIndex(x=>x.Title).IsUnique();
+            //builder.HasIndex(x=>x.Title).IsUnique();
 
         }
     }

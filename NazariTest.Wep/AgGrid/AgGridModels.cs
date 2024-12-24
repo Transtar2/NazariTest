@@ -16,6 +16,12 @@
 
     public class FilterModel
     {
-        public string Make { get; set; }
+        public TextFilter Title { get; set; }
+    }
+    public class TextFilter
+    {
+        public string FilterType { get; set; } = "text";
+        public string Type { get; set; } = "contains";
+        public string Filter { get; set; }
     }
 }

@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using AgGrid.InfiniteRowModel;
-using AgGrid.InfiniteRowModel.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using NazariTest.Application.Models;
 using NazariTest.Application.Services;
@@ -8,6 +6,7 @@ using NazariTest.Wep.AgGrid;
 using NazariTest.Application.Public;
 using NazariTest.Application.Enums;
 using NazariTest.Application.Extensions;
+using System.Linq.Dynamic.Core;
 
 
 namespace NazariTest.Wep.Controllers
@@ -34,27 +33,37 @@ namespace NazariTest.Wep.Controllers
 
                 };
             }
-            return await financialYearService.CreateAsync(model);
+            if(model.Id is null)
+                return await financialYearService.CreateAsync(model);
 
+            return await financialYearService.UpdateAsync(model);
         }
         [HttpPost]
         public async Task<IActionResult> GetData([FromBody] GridRequest request)
         {
             var query = await financialYearService.GetAllAsync();
-            if (!string.IsNullOrEmpty(request.FilterModel?.Make))
+            if (!string.IsNullOrEmpty(request.FilterModel?.Title?.Filter))
             {
-                query = query.Where(c => c.Title.Contains(request.FilterModel.Make));
+                query = query.Where(c => c.Title.Contains(request.FilterModel.Title.Filter));
             }
 
             // Sorting
             if (request.SortModel != null && request.SortModel.Any())
             {
+                string dynamicLinqOrder = string.Empty;
                 foreach (var sort in request.SortModel)
                 {
-                    query = sort.Sort == "asc"
-                        ? query.OrderBy(c => EF.Property<object>(c, sort.ColId))
-                        : query.OrderByDescending(c => EF.Property<object>(c, sort.ColId));
+                    dynamicLinqOrder += sort.ColId + " " + sort.Sort;
+                    query = query.AsQueryable().OrderBy(dynamicLinqOrder);
+                    //query = sort.Sort == "asc"
+                    //    ? query.AsQueryable().OrderBy(dynamicLinqOrder)
+                    //    : query.OrderByDescending(c => EF.Property<object>(c, sort.ColId));
                 }
+                
+            }
+            else
+            {
+                query= query.OrderBy(x => x.StartDate);
             }
 
             // Pagination
@@ -67,8 +76,13 @@ namespace NazariTest.Wep.Controllers
                 totalCount = totalRecords
             });
         }
+
+        public async Task<JsonResponse> Delete(Guid id)
+        {
+            var result = await financialYearService.DeleteAsync(id);
+
+            return result;
+        }
     }
 
-
-   
 }
